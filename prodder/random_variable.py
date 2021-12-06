@@ -50,7 +50,7 @@ class RandomVariable:
         )[1:]
         return {
             value: probability
-            for value, probability in zip(sorted_values, sorted_probabilities)
+            for value, probability in zip(sorted_values, cumulative_probabilities)
         }
 
     def maximum(self, num_trials: int) -> "RandomVariable":
