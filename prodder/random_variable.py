@@ -40,6 +40,10 @@ class RandomVariable:
             }
         )
 
+    @property
+    def mean(self):
+        return sum(value * probability for value, probability in self.pmf.items())
+
     def to_cdf(self) -> Dict[int, float]:
         sorted_values = sorted(self.pmf.keys())
         sorted_probabilities = [self.pmf[value] for value in sorted_values]
@@ -61,6 +65,10 @@ class RandomVariable:
                 for value, probability in self.to_cdf().items()
             }
         )
+
+    def minimum(self, num_trials: int) -> "RandomVariable":
+        """The minimum of num_trials independent evaluations of this variable"""
+        return -(-self).maximum(num_trials)
 
     def evaluate_cdf(self, value):
         """The probability of this random variable taking a value <= the given one"""
