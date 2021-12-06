@@ -31,6 +31,8 @@ def main():
         known_hand=[], known_board=board, precision=precision
     ).maximum(num_enemies)
     advantage = own_score - best_enemy_score
+    win_probability = 1 - advantage.evaluate_cdf(0)
+    st.write(f"The probability of winning is {win_probability * 100:.0f}%")
 
 
 main()
