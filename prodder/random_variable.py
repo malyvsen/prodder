@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from treys import Deck, Evaluator
-from types import defaultdict
+from collections import defaultdict
 from typing import Dict, List
 
 
