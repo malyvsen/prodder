@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from functools import reduce
 from treys import Deck, Evaluator
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Dict, List
 
 from .contains_duplicates import contains_duplicates
@@ -8,7 +9,17 @@ from .contains_duplicates import contains_duplicates
 
 @dataclass(frozen=True)
 class RandomVariable:
-    cdf: Dict[int, float]
+    pmf: Dict[int, float]
+
+    @classmethod
+    def from_cdf(cls, cdf: Dict[int, float]) -> "RandomVariable":
+        sorted_values = sorted(cdf.keys())
+        return cls(
+            pmf={
+                value: cdf[value] - (cdf[prev_value] if prev_value is not None else 0)
+                for prev_value, value in zip([None] + sorted_values, sorted_values)
+            }
+        )
 
     @classmethod
     def score(
@@ -16,37 +27,56 @@ class RandomVariable:
     ) -> "RandomVariable":
         """The score for a player's hand given the cards on the board"""
         evaluator = Evaluator()
-        scores = sorted(
+        scores = [
             evaluator.evaluate(
                 **random_situation(known_hand=known_hand, known_board=known_board)
             )
             for _ in range(precision)
-        )
-        cdf = {}
-        for num_scores_seen, score in enumerate(scores):
-            cdf[score] = (num_scores_seen + 1) / precision
-        return cls(cdf=cdf)
-
-    def maximum(self, num_trials: int) -> "RandomVariable":
-        """The maximum of num_trials independent evaluations of this variable"""
-        return type(self)(
-            cdf={
-                value: probability ** num_trials
-                for value, probability in self.cdf.items()
+        ]
+        return cls(
+            pmf={
+                value: num_occurences / precision
+                for value, num_occurences in Counter(scores).items()
             }
         )
 
+    def to_cdf(self) -> Dict[int, float]:
+        sorted_values = sorted(self.pmf.keys())
+        sorted_probabilities = [self.pmf[value] for value in sorted_values]
+        cumulative_probabilities = reduce(
+            lambda cumulative, current: cumulative + [cumulative[-1] + current],
+            sorted_probabilities,
+            [0],
+        )[1:]
+        return {
+            value: probability
+            for value, probability in zip(sorted_values, sorted_probabilities)
+        }
+
+    def maximum(self, num_trials: int) -> "RandomVariable":
+        """The maximum of num_trials independent evaluations of this variable"""
+        return self.from_cdf(
+            cdf={
+                value: probability ** num_trials
+                for value, probability in self.to_cdf().items()
+            }
+        )
+
+    def evaluate_cdf(self, value):
+        """The probability of this random variable taking a value <= the given one"""
+        return sum(probability for x, probability in self.pmf.items() if x <= value)
+
     def __neg__(self) -> "RandomVariable":
         return type(self)(
-            cdf={-value: 1 - probability for value, probability in self.cdf.items()}
+            pmf={-value: probability for value, probability in self.pmf.items()}
         )
 
     def __add__(self, other) -> "RandomVariable":
-        cdf = defaultdict(int)
-        for value, probability in self.cdf.items():
-            for other_value, other_probability in other.cdf.items():
-                cdf[value + other_value] += probability * other_probability
-        return type(self)(cdf=dict(cdf))
+        pmf = defaultdict(float)
+        for value, probability in self.pmf.items():
+            for other_value, other_probability in other.pmf.items():
+                pmf[value + other_value] += probability * other_probability
+        return type(self)(pmf=dict(pmf))
 
     def __sub__(self, other) -> "RandomVariable":
         return self + (-other)
