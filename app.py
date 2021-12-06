@@ -1,10 +1,23 @@
 import streamlit as st
+from prodder import RandomVariable
 from prodder.components import card_selector
 
 
 def main():
     st.title("Prodder")
-    hand = [card_selector("First card on hand"), card_selector("Second card on hand")]
+    precision = st.slider(
+        "Precision",
+        min_value=256,
+        max_value=4096,
+        help="Number of possible hands to randomly consider",
+    )
+    with st.expander("Hand", expanded=True):
+        hand = [card_selector("hand 1"), card_selector("hand 2")]
+    with st.expander("Board", expanded=True):
+        num_cards_on_board = st.selectbox(
+            "Number of cards on board", options=[0, 3, 4, 5]
+        )
+        board = [card_selector(f"board {idx}") for idx in range(num_cards_on_board)]
 
 
 main()
