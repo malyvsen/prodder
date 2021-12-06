@@ -12,6 +12,9 @@ streamlit = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.11b1"
+jupyter = "^1.0.0"
+nb-black = "^1.0.7"
+plotly = "^5.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
