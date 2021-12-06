@@ -12,6 +12,7 @@ def main():
         max_value=4096,
         help="Number of possible hands to randomly consider",
     )
+    num_enemies = st.slider("Number of other players", min_value=1, max_value=5)
     with st.expander("Hand", expanded=True):
         hand = [card_selector("hand 1"), card_selector("hand 2")]
     with st.expander("Board", expanded=True):
@@ -22,7 +23,14 @@ def main():
     if contains_duplicates(hand + board):
         st.error("Duplicated cards")
         return
-    RandomVariable.score(board=board, precision=precision)
+
+    own_score = RandomVariable.score(
+        known_hand=hand, known_board=board, precision=precision
+    )
+    best_enemy_score = RandomVariable.score(
+        known_hand=[], known_board=board, precision=precision
+    ).maximum(num_enemies)
+    advantage = own_score - best_enemy_score
 
 
 main()

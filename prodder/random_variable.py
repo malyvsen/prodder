@@ -11,11 +11,16 @@ class RandomVariable:
     cdf: Dict[int, float]
 
     @classmethod
-    def score(cls, board: List[int], precision: int) -> "RandomVariable":
+    def score(
+        cls, known_hand: List[int], known_board: List[int], precision: int
+    ) -> "RandomVariable":
         """The score for a player's hand given the cards on the board"""
         evaluator = Evaluator()
         scores = sorted(
-            evaluator.evaluate(**random_situation(board)) for _ in range(precision)
+            evaluator.evaluate(
+                **random_situation(known_hand=known_hand, known_board=known_board)
+            )
+            for _ in range(precision)
         )
         cdf = {}
         for num_scores_seen, score in enumerate(scores):
@@ -47,14 +52,15 @@ class RandomVariable:
         return self + (-other)
 
 
-def random_situation(known_board: List[int]):
+def random_situation(known_hand: List[int], known_board: List[int]):
+    deck = Deck()
+    draw = (
+        lambda num_cards: [deck.draw(num_cards)]
+        if num_cards == 1
+        else deck.draw(num_cards)
+    )
     while True:
-        deck = Deck()
-        hand = deck.draw(2)
-        extra_board = deck.draw(5 - len(known_board))
-        full_board = known_board + (
-            extra_board if isinstance(extra_board, list) else [extra_board]
-        )
+        hand = known_hand + draw(2 - len(known_hand))
+        full_board = known_board + draw(5 - len(known_board))
         if not contains_duplicates(hand + full_board):
-            print(f"cards: {hand}, board: {full_board}")
             return dict(cards=hand, board=full_board)
