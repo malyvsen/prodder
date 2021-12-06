@@ -3,6 +3,8 @@ from treys import Deck, Evaluator
 from collections import defaultdict
 from typing import Dict, List
 
+from .contains_duplicates import contains_duplicates
+
 
 @dataclass(frozen=True)
 class RandomVariable:
@@ -13,8 +15,7 @@ class RandomVariable:
         """The score for a player's hand given the cards on the board"""
         evaluator = Evaluator()
         scores = sorted(
-            evaluator.evaluate(cards=possible_hand(board), board=board)
-            for _ in range(precision)
+            evaluator.evaluate(**random_situation(board)) for _ in range(precision)
         )
         cdf = {}
         for num_scores_seen, score in enumerate(scores):
@@ -46,9 +47,14 @@ class RandomVariable:
         return self + (-other)
 
 
-def possible_hand(board: List[int]):
+def random_situation(known_board: List[int]):
     while True:
         deck = Deck()
-        cards = deck.draw(2)
-        if all(card not in board for card in cards):
-            return cards
+        hand = deck.draw(2)
+        extra_board = deck.draw(5 - len(known_board))
+        full_board = known_board + (
+            extra_board if isinstance(extra_board, list) else [extra_board]
+        )
+        if not contains_duplicates(hand + full_board):
+            print(f"cards: {hand}, board: {full_board}")
+            return dict(cards=hand, board=full_board)
