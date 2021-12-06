@@ -1,18 +1,23 @@
 import streamlit as st
 from prodder import RandomVariable
-from prodder.components import card_selector
+from prodder.components import card_selector, chip_counter
 from prodder.contains_duplicates import contains_duplicates
 
 
 def main():
     st.title("Prodder")
-    precision = st.slider(
-        "Precision",
-        min_value=256,
-        max_value=4096,
-        help="Number of possible hands to randomly consider",
-    )
-    num_enemies = st.slider("Number of other players", min_value=1, max_value=5)
+
+    with st.sidebar:
+        num_enemies = st.slider("Number of other players", min_value=1, max_value=5)
+        precision = st.slider(
+            "Precision",
+            min_value=256,
+            max_value=4096,
+            help="Number of possible hands to randomly consider",
+        )
+
+    with st.expander("Pot", expanded=True):
+        pot_amount = chip_counter()
     with st.expander("Hand", expanded=True):
         hand = [card_selector("hand 1"), card_selector("hand 2")]
     with st.expander("Board", expanded=True):
