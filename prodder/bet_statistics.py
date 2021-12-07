@@ -32,7 +32,7 @@ class BetStatistics:
         return cls(
             win_probability=win_probability,
             bet_utilities={
-                bet: win_probability * cls.utility(own_chips + pot_chips)
+                bet: win_probability * cls.utility(own_chips + pot_chips + bet)
                 + (1 - win_probability) * cls.utility(own_chips - bet)
                 - cls.utility(own_chips)
                 for bet in range(own_chips + 1)
