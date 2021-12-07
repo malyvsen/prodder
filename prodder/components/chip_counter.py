@@ -47,8 +47,9 @@ def streamlit_keys(master_key: str):
         change=f"chips_{master_key}_change",
         change_widget=f"{master_key}_change_widget",
     )
-    if keys["count"] not in st.session_state:
-        st.session_state[keys["count"]] = 0
-    if keys["change"] not in st.session_state:
-        st.session_state[keys["change"]] = 0
+    for handle, key in keys.items():
+        if "widget" not in handle:
+            if key not in st.session_state:
+                st.session_state[key] = 0
+            st.session_state[key] = int(st.session_state[key])
     return keys
