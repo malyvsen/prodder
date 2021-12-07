@@ -1,6 +1,6 @@
 import streamlit as st
 from prodder import RandomVariable
-from prodder.components import card_selector, chip_counter
+from prodder.components import card_selector, pot_counter, own_chip_counter
 from prodder.contains_duplicates import contains_duplicates
 
 
@@ -16,8 +16,9 @@ def main():
             help="Number of possible hands to randomly consider",
         )
 
-    with st.expander("Pot", expanded=True):
-        pot_amount = chip_counter()
+    with st.expander("Chips", expanded=True):
+        num_pot_chips = pot_counter()
+        num_own_chips = own_chip_counter()
     with st.expander("Hand", expanded=True):
         hand = [card_selector("hand 1"), card_selector("hand 2")]
     with st.expander("Board", expanded=True):

@@ -1,43 +1,54 @@
-from functools import reduce
 import streamlit as st
 
 
-def chip_counter() -> int:
-    pot_state_key = "num_chips_pot"
-    pot_widget_key = "pot_widget"
-    if pot_state_key not in st.session_state:
-        st.session_state[pot_state_key] = 0
-    added_state_key = "num_chips_added"
-    added_widget_key = "added_widget"
-    if added_state_key not in st.session_state:
-        st.session_state[added_state_key] = 0
+def chip_counter(
+    count_label: str,
+    change_label: str,
+    change_button_label: str,
+    change_callback,
+    keys: str,
+) -> int:
+    """A generic chip counter with a change button"""
 
-    pot_column, added_column = st.columns(2)
+    def sync_count():
+        st.session_state[keys["count"]] = st.session_state[keys["count_widget"]]
 
-    def set_pot():
-        st.session_state[pot_state_key] = st.session_state[pot_widget_key]
+    def sync_change():
+        st.session_state[keys["change"]] = st.session_state[keys["change_widget"]]
 
-    def set_added():
-        st.session_state[added_state_key] = st.session_state[added_widget_key]
+    def change_chips():
+        change_callback()
+        st.session_state[keys["change"]] = 0
 
-    def add_to_pot():
-        st.session_state[pot_state_key] += st.session_state[added_state_key]
-        st.session_state[added_state_key] = 0
-
-    with pot_column:
+    count_column, change_column = st.columns(2)
+    with count_column:
         st.number_input(
-            "Chips in the pot",
-            value=st.session_state[pot_state_key],
-            on_change=set_pot,
-            key=pot_widget_key,
+            count_label,
+            value=st.session_state[keys["count"]],
+            on_change=sync_count,
+            key=keys["count_widget"],
         )
-    with added_column:
+    with change_column:
         st.number_input(
-            "Chips an opponent is betting",
-            value=st.session_state[added_state_key],
-            on_change=set_added,
-            key=added_widget_key,
+            change_label,
+            value=st.session_state[keys["change"]],
+            on_change=sync_change,
+            key=keys["change_widget"],
         )
-        st.button("Add these to the pot", on_click=add_to_pot)
+        st.button(change_button_label, on_click=change_chips)
 
-    return st.session_state[pot_state_key]
+    return st.session_state[keys["count"]]
+
+
+def streamlit_keys(master_key: str):
+    keys = dict(
+        count=f"chips_{master_key}",
+        count_widget=f"{master_key}_widget",
+        change=f"chips_{master_key}_change",
+        change_widget=f"{master_key}_change_widget",
+    )
+    if keys["count"] not in st.session_state:
+        st.session_state[keys["count"]] = 0
+    if keys["change"] not in st.session_state:
+        st.session_state[keys["change"]] = 0
+    return keys
